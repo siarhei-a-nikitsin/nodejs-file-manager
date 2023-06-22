@@ -1,0 +1,17 @@
+{
+  "name": "file-manager",
+  "version": "1.0.0",
+  "description": "Node.js file manager",
+  "type": "module",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/siarhei-a-nikitsin/nodejs-file-manager.git"
+  },
+  "author": "siarhei-a-nikitsin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/siarhei-a-nikitsin/nodejs-file-manager/issues"
+  },
+  "homepage": "https://github.com/siarhei-a-nikitsin/nodejs-file-manager#readme"
+}
