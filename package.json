@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Node.js file manager",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "start": "node src/index.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/siarhei-a-nikitsin/nodejs-file-manager.git"
