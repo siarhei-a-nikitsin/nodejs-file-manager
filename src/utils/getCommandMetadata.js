@@ -1,13 +1,7 @@
 import {
-  commands,
-  commandDescriptorsByCommandKey,
   commandDescriptorByCommand,
   commandKeyByCommandDescriptor,
 } from "../commands/commandDescriptors.js";
-
-const matchToCommandDescriptor = (command) => {
-  // const { command, arguments: args, flags } = parsedCommand;
-};
 
 const getCommandMetadata = (parsedCommand) => {
   const { command, arguments: args, flags } = parsedCommand;

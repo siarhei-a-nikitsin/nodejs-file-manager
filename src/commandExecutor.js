@@ -1,8 +1,9 @@
 import { cwd, exit, chdir, argv } from "node:process";
 import { resolve } from "node:path";
+import { Writable } from "node:stream";
+
 
 import { commands } from "./commands/commandDescriptors.js";
-
 import {
   readFile,
   createEmptyFile,
@@ -23,7 +24,6 @@ import {
   getArchitecture,
 } from "./services/osService.js";
 import { printCWDTable } from "./utils/getTable.js";
-import { Writable } from "node:stream";
 
 const logInfo = console.info;
 const log = console.log;
