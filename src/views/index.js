@@ -1,8 +1,19 @@
-import { exit } from "node:process";
+import { cwd, exit } from "node:process";
+import { resolve } from "node:path";
 
 import { commands } from "../commands/commandDescriptors.js";
 
-import {} from "../services/fsService.js";
+import {
+  readFile,
+  createEmptyFile,
+  renameFile,
+  copyFile,
+  removeFile,
+  moveFile,
+  calculateHash,
+  compressFile,
+  decompressFile,
+} from "../services/fsService.js";
 import { goUp, goToFolder } from "../services/navService.js";
 import {
   getEOL,
@@ -45,6 +56,10 @@ class View {
     log(errorMessages.invalidOperation);
   };
 
+  #handleFailedCommand = () => {
+    log(errorMessages.failedOperation);
+  };
+
   // Nav operations
   #folderUp = () => {
     const newCurrentWorkingDirectory = goUp(
@@ -68,7 +83,51 @@ class View {
   };
 
   // File operations
-  // TODO: implement
+  #showFileContent = async (filePath) => {
+    const content = await readFile(resolve(cwd(), filePath));
+
+    log(content);
+  };
+
+  #createEmptyFile = async (fileName) => {
+    await createEmptyFile(resolve(cwd(), fileName));
+  };
+
+  #renameFile = async (filePath, newFileName) => {
+    await renameFile(filePath, newFileName);
+  };
+
+  #copyFile = async (filePath, destinationFolderPath) => {
+    await copyFile(
+      resolve(cwd(), filePath),
+      resolve(cwd(), destinationFolderPath)
+    );
+  };
+
+  #moveFile = async (filePath, destinationFolderPath) => {
+    await moveFile(
+      resolve(cwd(), filePath),
+      resolve(cwd(), destinationFolderPath)
+    );
+  };
+
+  #deleteFile = async (filePath) => {
+    await removeFile(resolve(cwd(), filePath));
+  };
+
+  #calculateFileHash = async (filePath) => {
+    const fileHash = await calculateHash(resolve(cwd(), filePath));
+
+    log(fileHash);
+  };
+
+  #compressFile = async (filePath, destinationFolderPath) => {
+    await compressFile(filePath, destinationFolderPath);
+  };
+
+  #decompressFile = async (filePath, destinationFolderPath) => {
+    await decompressFile(filePath, destinationFolderPath);
+  };
 
   // OS info operations
   #getOsEOL() {
@@ -93,49 +152,44 @@ class View {
     log(getArchitecture());
   }
 
-  // Hash calculation operations
-  // TODO: implement
-
-  // Compress and decompress operations
-  // TODO: implement
-
   get #handlerMap() {
     return new Map([
       [commands.greeting, this.#handleGreeting],
       [commands.invalidCommand, this.#handleInvalidCommand],
+      [commands.failedCommand, this.#handleFailedCommand],
       [commands.exit, this.#handleExit],
-      //
+      // Nav
       [commands.folderUp, this.#folderUp],
       [commands.moveToFolder, this.#goToFolder],
       [commands.showDirectoryContent, this.#showDirectoryContent],
-      //
-      // [commands.showFileContent, this.#],
-      // [commands.createEmptyFile, this.#],
-      // [commands.renameFile, this.#],
-      // [commands.copyFile, this.#],
-      // [commands.moveFile, this.#],
-      // [commands.deleteFile, this.#],
-      //
+      // File management
+      [commands.showFileContent, this.#showFileContent],
+      [commands.createEmptyFile, this.#createEmptyFile],
+      [commands.renameFile, this.#renameFile],
+      [commands.copyFile, this.#copyFile],
+      [commands.moveFile, this.#moveFile],
+      [commands.deleteFile, this.#deleteFile],
+      [commands.calculateFileHash, this.#calculateFileHash],
+      [commands.compressFile, this.#compressFile],
+      [commands.decompressFile, this.#decompressFile],
+      // OS info
       [commands.getEOL, this.#getOsEOL],
       [commands.getCPUS, this.#getOsCpus],
       [commands.getHomeDir, this.#getOsHomeDir],
       [commands.getCurrentSystemUserName, this.#getOsCurrentSystemUserName],
       [commands.getCpuArchitecture, this.#getOsCpuArchitecture],
-      //
-      // [commands.calculateFileHash, this.#],
-      //
-      // [commands.compressFile, this.#],
-      // [commands.decompressFile, this.#],
     ]);
   }
 
-  update(command, ...args) {
+  update = async (command, ...args) => {
     const handler = this.#handlerMap.get(command);
 
     if (handler) {
       try {
-        handler(...args);
+        await handler(...args);
       } catch (error) {
+        // log(error); // for debug
+
         log(errorMessages.failedOperation);
       }
     }
@@ -143,7 +197,7 @@ class View {
     if (command !== commands.exit) {
       this.#printCurrentWorkingDirectory();
     }
-  }
+  };
 }
 
 export default View;

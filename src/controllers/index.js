@@ -36,6 +36,10 @@ class CommandController {
       .on("close", () => {
         this.#view.update(commands.exit);
       });
+
+    // process.on("uncaughtException", () => {
+    //   this.#view.update(commands.failedCommand);
+    // });
   }
 }
 
