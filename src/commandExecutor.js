@@ -1,7 +1,7 @@
-import { cwd, exit } from "node:process";
+import { cwd, exit, chdir, argv } from "node:process";
 import { resolve } from "node:path";
 
-import { commands } from "../commands/commandDescriptors.js";
+import { commands } from "./commands/commandDescriptors.js";
 
 import {
   readFile,
@@ -13,15 +13,15 @@ import {
   calculateHash,
   compressFile,
   decompressFile,
-} from "../services/fsService.js";
-import { goUp, goToFolder } from "../services/navService.js";
+} from "./services/fsService.js";
+import { goUp } from "./services/navService.js";
 import {
   getEOL,
   getCpus,
   getHomedir,
   getSystemUserName,
   getArchitecture,
-} from "../services/osService.js";
+} from "./services/osService.js";
 
 const log = console.log;
 
@@ -30,24 +30,50 @@ const errorMessages = {
   failedOperation: "Operation failed",
 };
 
-class View {
-  #model;
+class CommandExecutor {
+  #userName;
 
-  constructor(model) {
-    this.#model = model;
+  #parseArgs() {
+    let userName = "Unknown";
+
+    const userNameParamName = "username";
+
+    const allAppParams = argv.slice(2);
+
+    const userNameParam = allAppParams.filter((param) =>
+      param.startsWith(`--${userNameParamName}=`)
+    )?.[0];
+
+    if (userNameParam) {
+      const parsedUserName = userNameParam.split("=")[1];
+
+      if (parsedUserName) {
+        userName = parsedUserName;
+      }
+    }
+
+    return {
+      userName,
+    };
+  }
+
+  constructor() {
+    const { userName } = this.#parseArgs();
+
+    this.#userName = userName;
   }
 
   // Service operations
-  #printCurrentWorkingDirectory = () => {
-    log(`You are currently in ${this.#model.currentWorkingDirectory}`);
+  #logCWD = () => {
+    log(`You are currently in ${cwd()}`);
   };
 
   #handleGreeting = () => {
-    log(`Welcome to the File Manager, ${this.#model.userName}!`);
+    log(`Welcome to the File Manager, ${this.#userName}!`);
   };
 
   #handleExit = () => {
-    log(`Thank you for using File Manager, ${this.#model.userName}, goodbye!`);
+    log(`Thank you for using File Manager, ${this.#userName}, goodbye!`);
 
     process.nextTick(() => exit());
   };
@@ -62,20 +88,15 @@ class View {
 
   // Nav operations
   #folderUp = () => {
-    const newCurrentWorkingDirectory = goUp(
-      this.#model.currentWorkingDirectory
-    );
+    const newCurrentWorkingDirectory = goUp(cwd());
 
-    this.#model.currentWorkingDirectory = newCurrentWorkingDirectory;
+    chdir(newCurrentWorkingDirectory);
   };
 
-  #goToFolder = (folderPath) => {
-    const newCurrentWorkingDirectory = goToFolder(
-      this.#model.currentWorkingDirectory,
-      folderPath
-    );
+  #goToFolder = (path) => {
+    const newPath = resolve(cwd(), path);
 
-    this.#model.currentWorkingDirectory = newCurrentWorkingDirectory;
+    chdir(newPath);
   };
 
   #showDirectoryContent = () => {
@@ -181,7 +202,7 @@ class View {
     ]);
   }
 
-  update = async (command, ...args) => {
+  exec = async (command, ...args) => {
     const handler = this.#handlerMap.get(command);
 
     if (handler) {
@@ -195,9 +216,9 @@ class View {
     }
 
     if (command !== commands.exit) {
-      this.#printCurrentWorkingDirectory();
+      this.#logCWD();
     }
   };
 }
 
-export default View;
+export default CommandExecutor;
