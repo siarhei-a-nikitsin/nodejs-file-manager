@@ -17,13 +17,17 @@ import {
 import { goUp } from "./services/navService.js";
 import {
   getEOL,
-  getCpus,
+  getCpuInfo,
   getHomedir,
   getSystemUserName,
   getArchitecture,
 } from "./services/osService.js";
+import { printCWDTable } from "./utils/getTable.js";
+import { Writable } from "node:stream";
 
+const logInfo = console.info;
 const log = console.log;
+const logError = console.error;
 
 const errorMessages = {
   invalidOperation: "Invalid input",
@@ -65,25 +69,25 @@ class CommandExecutor {
 
   // Service operations
   #logCWD = () => {
-    log(`You are currently in ${cwd()}`);
+    logInfo(`You are currently in ${cwd()}`);
   };
 
   #handleGreeting = () => {
-    log(`Welcome to the File Manager, ${this.#userName}!`);
+    logInfo(`Welcome to the File Manager, ${this.#userName}!`);
   };
 
   #handleExit = () => {
-    log(`Thank you for using File Manager, ${this.#userName}, goodbye!`);
+    logInfo(`Thank you for using File Manager, ${this.#userName}, goodbye!`);
 
     process.nextTick(() => exit());
   };
 
   #handleInvalidCommand = () => {
-    log(errorMessages.invalidOperation);
+    logError(errorMessages.invalidOperation);
   };
 
   #handleFailedCommand = () => {
-    log(errorMessages.failedOperation);
+    logError(errorMessages.failedOperation);
   };
 
   // Nav operations
@@ -99,15 +103,26 @@ class CommandExecutor {
     chdir(newPath);
   };
 
-  #showDirectoryContent = () => {
-    // TODO: implement
+  #showDirectoryContent = async () => {
+    await printCWDTable();
   };
 
   // File operations
   #showFileContent = async (filePath) => {
-    const content = await readFile(resolve(cwd(), filePath));
+    await readFile(
+      resolve(cwd(), filePath),
+      // fix issue when pass just stdout instead
+      new Writable({
+        decodeStrings: false,
+        write(chunk, _, cb) {
+          log(chunk);
 
-    log(content);
+          cb();
+        },
+      })
+    );
+
+    console.log(getEOL());
   };
 
   #createEmptyFile = async (fileName) => {
@@ -158,7 +173,11 @@ class CommandExecutor {
   }
 
   #getOsCpus() {
-    log(getCpus());
+    const { cpusAmount, cpus } = getCpuInfo();
+
+    log(`Overall amount of CPUs: ${cpusAmount}`);
+
+    console.table(cpus);
   }
 
   #getOsHomeDir() {

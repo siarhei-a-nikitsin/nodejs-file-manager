@@ -2,7 +2,9 @@ const FLAG_PREFIX = "--";
 
 const parseCommand = (input) => {
   if (!input) {
-    throw new Error("Parse command error: Empty command");
+    return {
+      command: "",
+    };
   }
 
   const parts = input.split(" ").filter((x) => !!x);
